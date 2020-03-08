@@ -1,0 +1,23 @@
+{
+  "name": "sahibindex",
+  "version": "1.0.0",
+  "description": "crawling sahibinden.com web site specific search result and send slack message to user :)",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "locally-crawler": "cross-env CRAWLING_URL_PATH=\\\"kiralik-daire/sahibinden?a811=40593&a811=40594&a811=40595&a811=40596&a811=40597&a811=40598&address_town=426&address_town=427&address_town=418&a20=38470&address_city=34\\\" node -e \"console.log(require('./src/crawler/index.js').handler({}));\"",
+    "locally-notification": "node -e \"console.log(require('./src/notification/index.js').handler({}));\""
+  },
+  "keywords": [],
+  "author": "rohat.sahin",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.586.0",
+    "axios": "^0.19.0",
+    "@slack/web-api": "^5.5.0",
+    "cheerio": "^1.0.0-rc.3"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.2"
+  }
+}
