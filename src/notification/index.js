@@ -12,11 +12,20 @@ async function sendSlackMessageToUser(message) {
     console.log('Starting send message to user with slack');
     let slack = new webApi.WebClient(process.env.SLACK_TOKEN);
 
+    const options = {
+        type: 'message',
+        as_user: true,
+        unfurl_links: true,
+        username: 'Sahibindenx Bot',
+        text: message
+    };
+
     let user = await slack.users.lookupByEmail({'email': process.env.USER_EMAIL});
-    message.channel = user.user.id;
+    options.channel = user.user.id;
+
     console.log('User finding id: ' + message.channel + ' and email: ' + process.env.USER_EMAIL);
 
-    let res = await slack.chat.postMessage(message);
+    let res = await slack.chat.postMessage(options);
     console.log('Message sent: ', res.ts);
 }
 
