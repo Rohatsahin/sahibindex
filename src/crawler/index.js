@@ -4,6 +4,7 @@ const Cheerio = require('cheerio');
 
 const baseUrl = 'https://www.sahibinden.com';
 
+// for to local env not need for lambda fuction
 const DynamoDB = new AWS.DynamoDB.DocumentClient({
     "region": process.env.DYNAMO_REGION,
     "accessKeyId": process.env.DYNAMO_ACCESS_KEY,
