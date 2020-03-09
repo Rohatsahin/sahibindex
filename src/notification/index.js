@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const webApi = require('@slack/web-api');
+const DataTable = require('./../dataTable');
 
 const DynamoDB = new AWS.DynamoDB.DocumentClient();
 
@@ -17,7 +18,15 @@ async function sendSlackMessageToUser(message) {
         as_user: true,
         unfurl_links: true,
         username: 'Sahibindenx Bot',
-        text: message
+        blocks: [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": message
+                }
+            }
+        ]
     };
 
     let user = await slack.users.lookupByEmail({'email': process.env.USER_EMAIL});
@@ -69,7 +78,15 @@ exports.handler = async function (event, context, callback) {
 
     // todo make slack messages more readable :)
     if (notifiedAdvertisement.Items.length > 0) {
-        await sendSlackMessageToUser(JSON.stringify(notifiedAdvertisement.Items));
+        let dataTable = DataTable.generateTable(notifiedAdvertisement.Items.map(item => {
+            return {
+                advertisement: item.advertisementName,
+                url: item.advertisementUrl,
+                price: item.advertisementCurrency,
+            };
+        }));
+
+        await sendSlackMessageToUser(dataTable);
     }
 
     callback(null, 'completion success');

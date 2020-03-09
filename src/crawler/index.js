@@ -1,30 +1,10 @@
 const AWS = require('aws-sdk');
-const Axios = require('axios');
 const Cheerio = require('cheerio');
+const puppeteer = require('puppeteer');
+const DynamoDB = new AWS.DynamoDB.DocumentClient();
 
 const baseUrl = 'https://www.sahibinden.com';
 
-// for to local env not need for lambda fuction
-const DynamoDB = new AWS.DynamoDB.DocumentClient({
-    "region": process.env.DYNAMO_REGION,
-    "accessKeyId": process.env.DYNAMO_ACCESS_KEY,
-    "secretAccessKey": process.env.DYNAMO_SECRET_ACCESS_KEY
-});
-
-const host = Axios.create({
-    baseURL: baseUrl
-});
-
-/**
- * get total page count for crawling page iterations -2 means minus önceki and sonraki buttons
- * @returns {Promise<number>}
- */
-async function getPageCount() {
-    const contentResponse = await host.get(process.env.CRAWLING_URL_PATH);
-
-    const content = Cheerio.load(contentResponse.data);
-    return content('.pageNavTable ul li').length - 2
-}
 
 /**
  * parse raw html page with cheerio and select table and extract search value data
@@ -96,23 +76,31 @@ async function saveDynamoDb(crawlData) {
 }
 
 exports.handler = async function (event, context, callback) {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
 
     try {
-        const pageCount = await getPageCount();
+        await page.goto(baseUrl + process.env.CRAWLING_URL_PATH);
+        let bodyHTML = await page.evaluate(() => document.body.innerHTML);
+
+        const content = Cheerio.load(bodyHTML);
+        const pageCount = content('.pageNavTable ul li').length - 2;
         const crawlData = [];
 
         for (let index = 0; index < pageCount; index++) {
             let pageUrl = "";
 
             if (index === 0) {
-                pageUrl = process.env.CRAWLING_URL_PATH;
+                pageUrl = baseUrl + process.env.CRAWLING_URL_PATH;
             } else {
                 let splicedUrl = process.env.CRAWLING_URL_PATH.split('?');
-                pageUrl = splicedUrl[0] + '?pagingOffset=' + 20 * index + splicedUrl[1];
+                pageUrl = baseUrl + splicedUrl[0] + '?pagingOffset=' + 20 * index + splicedUrl[1];
             }
 
-            const contentResponse = await host.get(pageUrl);
-            const crawledData = htmlContent2ContentData(contentResponse.data);
+
+            await page.goto(pageUrl);
+            let bodyHTML = await page.evaluate(() => document.body.innerHTML);
+            const crawledData = htmlContent2ContentData(bodyHTML);
 
             await new Promise(resolve => setTimeout(() => {
                 console.log("wait connem cok hızlı gitmeyelim :)");
