@@ -1,6 +1,5 @@
 const AWS = require('aws-sdk');
 const webApi = require('@slack/web-api');
-const DataTable = require('./../dataTable');
 
 const DynamoDB = new AWS.DynamoDB.DocumentClient();
 
@@ -78,13 +77,13 @@ exports.handler = async function (event, context, callback) {
 
     // todo make slack messages more readable :)
     if (notifiedAdvertisement.Items.length > 0) {
-        let dataTable = DataTable.generateTable(notifiedAdvertisement.Items.map(item => {
+        let dataTable = notifiedAdvertisement.Items.map(item => {
             return {
                 advertisement: item.advertisementName,
                 url: item.advertisementUrl,
                 price: item.advertisementCurrency,
             };
-        }));
+        });
 
         await sendSlackMessageToUser(dataTable);
     }

@@ -85,18 +85,13 @@ exports.handler = async function (event, context, callback) {
 
         const content = Cheerio.load(bodyHTML);
         const pageCount = content('.pageNavTable ul li').length - 2;
-        const crawlData = [];
 
-        for (let index = 0; index < pageCount; index++) {
-            let pageUrl = "";
+        const crawlData = htmlContent2ContentData(bodyHTML);
 
-            if (index === 0) {
-                pageUrl = baseUrl + process.env.CRAWLING_URL_PATH;
-            } else {
-                let splicedUrl = process.env.CRAWLING_URL_PATH.split('?');
-                pageUrl = baseUrl + splicedUrl[0] + '?pagingOffset=' + 20 * index + splicedUrl[1];
-            }
+        for (let index = 1; index < pageCount; index++) {
 
+            let splicedUrl = process.env.CRAWLING_URL_PATH.split('?');
+            let pageUrl = baseUrl + splicedUrl[0] + '?pagingOffset=' + 20 * index + splicedUrl[1];
 
             await page.goto(pageUrl);
             let bodyHTML = await page.evaluate(() => document.body.innerHTML);
